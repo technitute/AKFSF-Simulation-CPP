@@ -13,8 +13,8 @@
 // YOU CAN USE AND MODIFY THESE CONSTANTS HERE
 constexpr bool INIT_ON_FIRST_PREDICTION = true;
 constexpr double INIT_POS_STD = 0;
-constexpr double INIT_VEL_STD = 15;
-constexpr double ACCEL_STD = 0.1;
+constexpr double INIT_VEL_STD = 0;
+constexpr double ACCEL_STD = 0;
 constexpr double GPS_POS_STD = 3.0;
 // -------------------------------------------------- //
 
@@ -35,7 +35,6 @@ void KalmanFilter::predictionStep(double dt)
 
             // Assume the initial position is (X,Y) = (0,0) m
             // Assume the initial velocity is 5 m/s at 45 degrees (VX,VY) = (5*cos(45deg),5*sin(45deg)) m/s
-            state << 0, 0, 5.0*cos(M_PI/4), 5.0*sin(M_PI/4);
 
             setState(state);
             setCovariance(cov);
