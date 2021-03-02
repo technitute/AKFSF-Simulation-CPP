@@ -11,10 +11,10 @@
 
 // -------------------------------------------------- //
 // YOU CAN USE AND MODIFY THESE CONSTANTS HERE
-constexpr double ACCEL_STD = 0.05;
+constexpr double ACCEL_STD = 1.0;
 constexpr double GYRO_STD = 0.01/180.0 * M_PI;
-constexpr double INIT_VEL_STD = 2;
-constexpr double INIT_PSI_STD = 5.0/180.0 * M_PI;
+constexpr double INIT_VEL_STD = 10.0;
+constexpr double INIT_PSI_STD = 45.0/180.0 * M_PI;
 constexpr double GPS_POS_STD = 3.0;
 constexpr double LIDAR_RANGE_STD = 3.0;
 constexpr double LIDAR_THETA_STD = 0.02;
@@ -37,7 +37,9 @@ void KalmanFilter::handleLidarMeasurement(LidarMeasurement meas, const BeaconMap
         // section below.
         // HINT: use the wrapAngle() function on angular values to always keep angle
         // values within correct range, otherwise strange angle effects might be seen.
-        // Hint: You can use the constants: LIDAR_RANGE_STD, LIDAR_THETA_STD
+        // HINT: You can use the constants: LIDAR_RANGE_STD, LIDAR_THETA_STD
+        // HINT: The mapped-matched beacon position can be accessed by the variables
+        // map_beacon.x and map_beacon.y
         // ----------------------------------------------------------------------- //
         // ENTER YOUR CODE HERE
 
@@ -69,7 +71,7 @@ void KalmanFilter::handleLidarMeasurement(LidarMeasurement meas, const BeaconMap
             MatrixXd S = H * cov * H.transpose() + R;
             MatrixXd K = cov*H.transpose()*S.inverse();
 
-            y(1) = wrapAngle(y(1)); // Wrap the Heading Error
+            y(1) = wrapAngle(y(1)); // Wrap the Heading Innovation
 
             state = state + K*y;
             cov = (Matrix4d::Identity() - K*H) * cov;            
@@ -90,7 +92,9 @@ void KalmanFilter::predictionStep(GyroMeasurement gyro, double dt)
 
         // Implement The Kalman Filter Prediction Step for the system in the  
         // section below.
-        // Hint: You can use the constants: ACCEL_STD, GYRO_STD
+        // HINT: Assume the state vector has the form [PX, PY, PSI, V].
+        // HINT: Use the Gyroscope measurement as an input into the prediction step.
+        // HINT: You can use the constants: ACCEL_STD, GYRO_STD
         // HINT: use the wrapAngle() function on angular values to always keep angle
         // values within correct range, otherwise strange angle effects might be seen.
         // ----------------------------------------------------------------------- //
@@ -114,8 +118,8 @@ void KalmanFilter::predictionStep(GyroMeasurement gyro, double dt)
 
         // Generate Q Matrix
         MatrixXd Q = Matrix4d::Zero();
-        Q(2,2) = dt*GYRO_STD*GYRO_STD;
-        Q(3,3) = dt*ACCEL_STD*ACCEL_STD;
+        Q(2,2) = dt*dt*GYRO_STD*GYRO_STD;
+        Q(3,3) = dt*dt*ACCEL_STD*ACCEL_STD;
 
         cov = F * cov * F.transpose() + Q;
 
