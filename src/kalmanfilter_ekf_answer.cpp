@@ -133,7 +133,7 @@ void KalmanFilter::predictionStep(GyroMeasurement gyro, double dt)
 void KalmanFilter::handleGPSMeasurement(GPSMeasurement meas)
 {
     // All this code is the same as the LKF as the measurement model is linear
-    // so the EKF update state would just produce the same result.
+    // so the UKF update state would just produce the same result.
     if(isInitialised())
     {
         VectorXd state = getState();
