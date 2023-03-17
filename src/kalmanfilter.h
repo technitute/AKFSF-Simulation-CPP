@@ -24,6 +24,15 @@ class KalmanFilterBase
         void reset(){m_initialised = false;}
         bool isInitialised() const {return m_initialised;}
 
+        VehicleState getVehicleState();
+        Matrix2d getVehicleStatePositionCovariance();
+
+        void predictionStep(double dt) = 0;
+        void predictionStep(GyroMeasurement gyro, double dt) = 0;
+        void handleLidarMeasurements(const std::vector<LidarMeasurement>& meas, const BeaconMap& map) = 0;
+        void handleLidarMeasurement(LidarMeasurement meas, const BeaconMap& map) = 0;
+        void handleGPSMeasurement(GPSMeasurement meas) = 0;
+
     protected:
     
         VectorXd getState() const {return m_state;}
@@ -32,22 +41,12 @@ class KalmanFilterBase
         void setCovariance(const MatrixXd& cov ){m_covariance = cov;}
 
     private:
+    
         bool m_initialised;
         VectorXd m_state;
         MatrixXd m_covariance;
 };
 
-class KalmanFilter : public KalmanFilterBase
-{
-    public:
-
-        VehicleState getVehicleState();
-        Matrix2d getVehicleStatePositionCovariance();
-
-        void predictionStep(double dt);
-        void predictionStep(GyroMeasurement gyro, double dt);
-        void handleLidarMeasurements(const std::vector<LidarMeasurement>& meas, const BeaconMap& map);
-        void handleLidarMeasurement(LidarMeasurement meas, const BeaconMap& map);
-        void handleGPSMeasurement(GPSMeasurement meas);
-
-};
+class KalmanFilterLKF : public KalmanFilterBase{};
+class KalmanFilterEKF : public KalmanFilterBase{};
+class KalmanFilterUKF : public KalmanFilterBase{};
