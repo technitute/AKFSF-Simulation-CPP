@@ -1,5 +1,4 @@
-#ifndef INCLUDE_AKFSFSIM_SIMULATION_H
-#define INCLUDE_AKFSFSIM_SIMULATION_H
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -104,6 +103,3 @@ class Simulation
         std::vector<double> m_filter_error_velocity_history;
 
 };
-
-
-#endif  // INCLUDE_AKFSFSIM_SIMULATION_H

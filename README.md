@@ -107,3 +107,5 @@ Starting from any filter base replace the ```kalmanfilter.cpp``` file. Program a
 ## Authors ##
 
 This project was developed for the Technitute Course - Advanced Kalman Filtering and Sensor Fusion. Developed and produced by Dr. Steven Dumble.
+
+Special thanks to Giovanni Rasera for code improvements and MacOS support.

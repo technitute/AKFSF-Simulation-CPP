@@ -1,6 +1,4 @@
-#ifndef INCLUDE_AKFSFSIM_BEACONS_H
-#define INCLUDE_AKFSFSIM_BEACONS_H
-
+#pragma once
 #include <vector>
 
 class Display;
@@ -32,6 +30,3 @@ class BeaconMap
 
         std::vector<BeaconData> m_beacon_map;    
 };
-
-
-#endif  // INCLUDE_AKFSFSIM_BEACONS_H

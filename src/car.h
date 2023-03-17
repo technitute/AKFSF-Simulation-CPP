@@ -1,5 +1,4 @@
-#ifndef INCLUDE_AKFSFSIM_CAR_H
-#define INCLUDE_AKFSFSIM_CAR_H
+#pragma once
 
 #include <queue>
 #include <cmath>
@@ -229,6 +228,3 @@ class Car
         std::vector<std::vector<Vector2>> m_marker_lines;
         Vector2 m_wheel_fl_offset, m_wheel_fr_offset, m_wheel_rl_offset, m_wheel_rr_offset;
 };
-
-
-#endif  // INCLUDE_AKFSFSIM_CAR_H

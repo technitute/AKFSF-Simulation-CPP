@@ -1,5 +1,4 @@
-#ifndef INCLUDE_AKFSFSIM_KALMANFILTER_H
-#define INCLUDE_AKFSFSIM_KALMANFILTER_H
+#pragma once
 
 #include <vector>
 #include <Eigen/Dense>
@@ -52,5 +51,3 @@ class KalmanFilter : public KalmanFilterBase
         void handleGPSMeasurement(GPSMeasurement meas);
 
 };
-
-#endif  // INCLUDE_AKFSFSIM_KALMANFILTER_H
