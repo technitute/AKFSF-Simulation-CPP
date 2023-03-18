@@ -5,6 +5,7 @@
 
 Simulation::Simulation()
 : m_sim_parameters(SimulationParams()),
+    m_selected_filter(&m_kalman_filter_lkf),
     m_is_paused(false),
     m_is_running(false),
     m_time_multiplier(1),
@@ -26,7 +27,9 @@ void Simulation::reset()
     m_is_running = true;
     m_is_paused = false;
     
-    m_kalman_filter.reset();
+    m_kalman_filter_lkf.reset();
+    m_kalman_filter_ekf.reset();
+    m_kalman_filter_ukf.reset();
 
     m_gps_sensor.reset();
     m_gps_sensor.setGPSNoiseStd(m_sim_parameters.gps_position_noise_std);
@@ -86,7 +89,7 @@ void Simulation::update()
                 if (m_time_till_gyro_measurement <= 0)
                 {
                     GyroMeasurement meas = m_gyro_sensor.generateGyroMeasurement(m_car.getVehicleState().yaw_rate);
-                    m_kalman_filter.predictionStep(meas, m_sim_parameters.time_step);
+                    m_selected_filter->predictionStep(meas, m_sim_parameters.time_step);
                     m_time_till_gyro_measurement += 1.0/m_sim_parameters.gyro_update_rate;
                 }
                 m_time_till_gyro_measurement -= m_sim_parameters.time_step;
@@ -98,7 +101,7 @@ void Simulation::update()
                 if (m_time_till_gps_measurement <= 0)
                 {
                     GPSMeasurement gps_meas = m_gps_sensor.generateGPSMeasurement(m_car.getVehicleState().x,m_car.getVehicleState().y);
-                    m_kalman_filter.handleGPSMeasurement(gps_meas);
+                    m_selected_filter->handleGPSMeasurement(gps_meas);
                     m_gps_measurement_history.push_back(gps_meas);
                     m_time_till_gps_measurement += 1.0/m_sim_parameters.gps_update_rate;
                 }
@@ -111,7 +114,7 @@ void Simulation::update()
                 if (m_time_till_lidar_measurement <= 0)
                 {
                     std::vector<LidarMeasurement> lidar_measurements = m_lidar_sensor.generateLidarMeasurements(m_car.getVehicleState().x,m_car.getVehicleState().y, m_car.getVehicleState().psi, m_beacons);
-                    m_kalman_filter.handleLidarMeasurements(lidar_measurements, m_beacons);
+                    m_selected_filter->handleLidarMeasurements(lidar_measurements, m_beacons);
                     m_lidar_measurement_history = lidar_measurements;
                     m_time_till_lidar_measurement += 1.0/m_sim_parameters.lidar_update_rate;
                 }
@@ -119,10 +122,10 @@ void Simulation::update()
             }
 
             // Save Filter History and Calculate Stats
-            if (m_kalman_filter.isInitialised())
+            if (m_selected_filter->isInitialised())
             {
                 VehicleState vehicle_state = m_car.getVehicleState();
-                VehicleState filter_state = m_kalman_filter.getVehicleState();
+                VehicleState filter_state = m_selected_filter->getVehicleState();
                 m_filter_position_history.push_back(Vector2(filter_state.x, filter_state.y));
                 m_filter_error_x_position_history.push_back(filter_state.x - vehicle_state.x);
                 m_filter_error_y_position_history.push_back(filter_state.y - vehicle_state.y);
@@ -152,10 +155,10 @@ void Simulation::render(Display& disp)
     disp.setDrawColour(100,0,0);
     disp.drawLines(m_filter_position_history);
 
-    if (m_kalman_filter.isInitialised())
+    if (m_selected_filter->isInitialised())
     {
-        VehicleState filter_state = m_kalman_filter.getVehicleState();
-        Eigen::Matrix2d cov = m_kalman_filter.getVehicleStatePositionCovariance();
+        VehicleState filter_state = m_selected_filter->getVehicleState();
+        Eigen::Matrix2d cov = m_selected_filter->getVehicleStatePositionCovariance();
 
         double x = filter_state.x;
         double y = filter_state.y;
@@ -230,10 +233,10 @@ void Simulation::render(Display& disp)
     disp.drawText_MainFont(xpos,Vector2(x_offset,y_offset+stride*3),1.0,{255,255,255});
     disp.drawText_MainFont(ypos,Vector2(x_offset,y_offset+stride*4),1.0,{255,255,255});
 
-    std::string kf_velocity_string = string_format("    Velocity: %0.2f m/s",m_kalman_filter.getVehicleState().V);
-    std::string kf_yaw_string = string_format("   Heading: %0.2f deg",m_kalman_filter.getVehicleState().psi * 180.0/M_PI);
-    std::string kf_xpos = string_format("X Position: %0.2f m",m_kalman_filter.getVehicleState().x);
-    std::string kf_ypos = string_format("Y Position: %0.2f m",m_kalman_filter.getVehicleState().y);
+    std::string kf_velocity_string = string_format("    Velocity: %0.2f m/s",m_selected_filter->getVehicleState().V);
+    std::string kf_yaw_string = string_format("   Heading: %0.2f deg",m_selected_filter->getVehicleState().psi * 180.0/M_PI);
+    std::string kf_xpos = string_format("X Position: %0.2f m",m_selected_filter->getVehicleState().x);
+    std::string kf_ypos = string_format("Y Position: %0.2f m",m_selected_filter->getVehicleState().y);
     disp.drawText_MainFont("Filter State",Vector2(x_offset,y_offset+stride*6),1.0,{255,255,255});
     disp.drawText_MainFont(kf_velocity_string,Vector2(x_offset,y_offset+stride*7),1.0,{255,255,255});
     disp.drawText_MainFont(kf_yaw_string,Vector2(x_offset,y_offset+stride*8),1.0,{255,255,255});
@@ -242,12 +245,13 @@ void Simulation::render(Display& disp)
 
     // Keyboard Input
     x_offset = 10;
-    y_offset = 650;
-    disp.drawText_MainFont("Reset Key: r",Vector2(x_offset,y_offset+stride*0),1.0,{255,255,255});
-    disp.drawText_MainFont("Pause Key: [space bar]",Vector2(x_offset,y_offset+stride*1),1.0,{255,255,255});
-    disp.drawText_MainFont("Speed Multiplier (+/-) Key: [ / ] ",Vector2(x_offset,y_offset+stride*2),1.0,{255,255,255});
-    disp.drawText_MainFont("Zoom (+/-) Key: + / - (keypad)",Vector2(x_offset,y_offset+stride*3),1.0,{255,255,255});
-    disp.drawText_MainFont("Motion Profile Key: 1 - 9,0",Vector2(x_offset,y_offset+stride*4),1.0,{255,255,255});
+    y_offset = 600;
+    disp.drawText_MainFont("Change Filter: l [linear], e [extended], u [unscented]", Vector2(x_offset, y_offset+stride*0), 1.0, {255, 255, 255});
+    disp.drawText_MainFont("Reset Key: r",Vector2(x_offset,y_offset+stride*1),1.0,{255,255,255});
+    disp.drawText_MainFont("Pause Key: [space bar]",Vector2(x_offset,y_offset+stride*2),1.0,{255,255,255});
+    disp.drawText_MainFont("Speed Multiplier (+/-) Key: [ / ] ",Vector2(x_offset,y_offset+stride*3),1.0,{255,255,255});
+    disp.drawText_MainFont("Zoom (+/-) Key: + / - (keypad)",Vector2(x_offset,y_offset+stride*4),1.0,{255,255,255});
+    disp.drawText_MainFont("Motion Profile Key: 1 - 9,0",Vector2(x_offset,y_offset+stride*5),1.0,{255,255,255});
 
 
     // Filter Error State
@@ -295,3 +299,29 @@ void Simulation::togglePauseSimulation()
 }
 bool Simulation::isPaused(){return m_is_paused;}
 bool Simulation::isRunning(){return m_is_running;}
+void Simulation::selectKalmanFilter(unsigned int ind)
+{
+    switch(ind)
+    {
+        case 0:
+        {
+            std::cout << "Linear Kalman Filter Selected" << std::endl;
+            m_selected_filter = &m_kalman_filter_lkf;
+            break;
+        }
+        case 1:
+        {
+            std::cout << "Extended Kalman Filter Selected" << std::endl;
+            m_selected_filter = &m_kalman_filter_ekf;
+            break;
+        }
+        case 2: 
+        {
+            std::cout << "Unscented Kalman Filter Selected" << std::endl;
+            m_selected_filter = &m_kalman_filter_ukf;
+            break;
+        }
+    }
+
+    reset();
+}

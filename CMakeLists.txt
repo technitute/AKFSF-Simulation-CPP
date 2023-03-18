@@ -4,6 +4,7 @@ project(AKFSFSimulation)
 set(CMAKE_CXX_STANDARD 11)
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+find_package (SDL2 REQUIRED COMPONENTS SDL2)
 
 set(SRC_CPP
     src/main.cpp
@@ -12,7 +13,9 @@ set(SRC_CPP
     src/sensors.cpp
     src/simulation.cpp
     src/utils.cpp
-    src/kalmanfilter.cpp
+    src/kalmanfilter_lkf.cpp
+    src/kalmanfilter_ekf.cpp
+    src/kalmanfilter_ukf.cpp
 )
 
 add_executable(${PROJECT_NAME}
@@ -20,7 +23,7 @@ add_executable(${PROJECT_NAME}
         )
 
 target_link_libraries(${PROJECT_NAME}
-        SDL2
+        SDL2::SDL2
         SDL2_ttf
         Eigen3::Eigen
         )

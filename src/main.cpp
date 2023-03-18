@@ -95,6 +95,9 @@ int main( int argc, char* args[] )
                     case SDLK_8: mSimulation.reset(loadSimulation8Parameters()); break;
                     case SDLK_9: mSimulation.reset(loadSimulation9Parameters()); break;
                     case SDLK_0: mSimulation.reset(loadSimulation0Parameters()); break;
+                    case SDLK_l: mSimulation.selectKalmanFilter(0); break;
+                    case SDLK_e: mSimulation.selectKalmanFilter(1); break;
+                    case SDLK_u: mSimulation.selectKalmanFilter(2); break;
                 }
             }
         }

@@ -2,9 +2,6 @@
 // Advanced Kalman Filtering and Sensor Fusion Course - Extended Kalman Filter
 //
 // ####### STUDENT FILE #######
-//
-// Usage:
-// -Rename this file to "kalmanfilter.cpp" if you want to use this code.
 
 #include "kalmanfilter.h"
 #include "utils.h"
@@ -20,13 +17,13 @@ constexpr double LIDAR_RANGE_STD = 3.0;
 constexpr double LIDAR_THETA_STD = 0.02;
 // -------------------------------------------------- //
 
-void KalmanFilter::handleLidarMeasurements(const std::vector<LidarMeasurement>& dataset, const BeaconMap& map)
+void KalmanFilterEKF::handleLidarMeasurements(const std::vector<LidarMeasurement>& dataset, const BeaconMap& map)
 {
     // Assume No Correlation between the Measurements and Update Sequentially
     for(const auto& meas : dataset) {handleLidarMeasurement(meas, map);}
 }
 
-void KalmanFilter::handleLidarMeasurement(LidarMeasurement meas, const BeaconMap& map)
+void KalmanFilterEKF::handleLidarMeasurement(LidarMeasurement meas, const BeaconMap& map)
 {
     if (isInitialised())
     {
@@ -56,7 +53,7 @@ void KalmanFilter::handleLidarMeasurement(LidarMeasurement meas, const BeaconMap
     }
 }
 
-void KalmanFilter::predictionStep(GyroMeasurement gyro, double dt)
+void KalmanFilterEKF::predictionStep(GyroMeasurement gyro, double dt)
 {
     if (isInitialised())
     {
@@ -80,7 +77,7 @@ void KalmanFilter::predictionStep(GyroMeasurement gyro, double dt)
     } 
 }
 
-void KalmanFilter::handleGPSMeasurement(GPSMeasurement meas)
+void KalmanFilterEKF::handleGPSMeasurement(GPSMeasurement meas)
 {
     // All this code is the same as the LKF as the measurement model is linear
     // so the EKF update state would just produce the same result.
@@ -127,7 +124,7 @@ void KalmanFilter::handleGPSMeasurement(GPSMeasurement meas)
              
 }
 
-Matrix2d KalmanFilter::getVehicleStatePositionCovariance()
+Matrix2d KalmanFilterEKF::getVehicleStatePositionCovariance()
 {
     Matrix2d pos_cov = Matrix2d::Zero();
     MatrixXd cov = getCovariance();
@@ -135,7 +132,7 @@ Matrix2d KalmanFilter::getVehicleStatePositionCovariance()
     return pos_cov;
 }
 
-VehicleState KalmanFilter::getVehicleState()
+VehicleState KalmanFilterEKF::getVehicleState()
 {
     if (isInitialised())
     {
@@ -145,4 +142,4 @@ VehicleState KalmanFilter::getVehicleState()
     return VehicleState();
 }
 
-void KalmanFilter::predictionStep(double dt){}
+void KalmanFilterEKF::predictionStep(double dt){}

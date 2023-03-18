@@ -70,11 +70,17 @@ class Simulation
         void togglePauseSimulation();
         bool isPaused();
         bool isRunning();
+        void selectKalmanFilter(unsigned int ind);
 
     private:
 
         SimulationParams m_sim_parameters;
-        KalmanFilter m_kalman_filter;
+
+        KalmanFilterLKF m_kalman_filter_lkf;
+        KalmanFilterEKF m_kalman_filter_ekf;
+        KalmanFilterUKF m_kalman_filter_ukf;
+        KalmanFilterBase* m_selected_filter;
+
         Car m_car;
         BeaconMap m_beacons;
         GyroSensor m_gyro_sensor;
