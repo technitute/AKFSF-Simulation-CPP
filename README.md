@@ -39,7 +39,7 @@ This project will use the Ubuntu 64 20.04.2.0 LTS VM C++ development environment
  
  3. You should now be able to and run the estimation simulator
  ```
- ./AKFSF-Simulation
+ ./AKFSFSimulation
  ```
 ### Project Structure ###
 There are 6 main files of interest:
